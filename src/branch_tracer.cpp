@@ -4,7 +4,6 @@
 #include <branch_tracer.hpp>
 
 std::once_flag BranchTracer::init_sym;
-Utils::SoftwareBP BranchTracer::global_bp;
 
 // Constructor.
 BranchTracer::BranchTracer(std::string filename, size_t start, size_t end, bool only_api) :
@@ -14,18 +13,18 @@ BranchTracer::BranchTracer(std::string filename, size_t start, size_t end, bool 
 }
 
 // Handle single step exception.
-void BranchTracer::HandleSingleStep(PCONTEXT context) {
-    Trace(context);
+void BranchTracer::HandleSingleStep(PCONTEXT context, Utils::SoftwareBP& bp) {
+    Trace(context, bp);
 }
 
 // Handle software breakpoint exception.
-void BranchTracer::HandleBreakpoint(PCONTEXT context) {
-    global_bp.Recover(context->RegisterIp);
-    Trace(context);
+void BranchTracer::HandleBreakpoint(PCONTEXT context, Utils::SoftwareBP& bp) {
+    bp.Recover(context->RegisterIp);
+    Trace(context, bp);
 }
 
 // Trace given context.
-void BranchTracer::Trace(PCONTEXT context) {
+void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
     bool bp_set = false;
     BYTE* opc = reinterpret_cast<BYTE*>(context->RegisterIp);
 
@@ -50,7 +49,7 @@ void BranchTracer::Trace(PCONTEXT context) {
             Log(context->RegisterIp, called_next);
 
             if (!(start <= called_next && called_next <= end)) {
-                global_bp.Set(retn);
+                bp.Set(retn);
                 bp_set = true;
             }
         } else if (!only_api) {
@@ -61,7 +60,7 @@ void BranchTracer::Trace(PCONTEXT context) {
         Log(context->RegisterIp, called);
 
         if (!(start <= called && called <= end)) {
-            global_bp.Set(retn);
+            bp.Set(retn);
             bp_set = true;
         }
     }

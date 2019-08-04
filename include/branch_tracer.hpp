@@ -16,13 +16,13 @@ struct BranchTracer : Tracer {
     BranchTracer(std::string filename, size_t start, size_t end, bool only_api = true);
 
     // Handle single step exception.
-    void HandleSingleStep(PCONTEXT context) override;
+    void HandleSingleStep(PCONTEXT context, Utils::SoftwareBP& bp) override;
     // Handle software breakpoint exception.
-    void HandleBreakpoint(PCONTEXT context) override;
+    void HandleBreakpoint(PCONTEXT context, Utils::SoftwareBP& bp) override;
 
 private:
     // Trace given context.
-    void Trace(PCONTEXT context);
+    void Trace(PCONTEXT context, Utils::SoftwareBP& bp);
     // Write Log
     void Log(size_t src, size_t called);
 
@@ -32,7 +32,6 @@ private:
     std::ofstream output;
 
     static std::once_flag init_sym;
-    static Utils::SoftwareBP global_bp;
 };
 
 #endif
