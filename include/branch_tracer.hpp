@@ -4,9 +4,11 @@
 #include <Windows.h>
 
 #include <fstream>
+#include <mutex>
 #include <string>
 
 #include "tracer.hpp"
+#include "utils.hpp"
 
 // Implementation of branch tracer.
 struct BranchTracer : Tracer {
@@ -21,15 +23,16 @@ struct BranchTracer : Tracer {
 private:
     // Trace given context.
     void Trace(PCONTEXT context);
-    // Wrtie log and set bp.
-    bool LogAndBreak(size_t src, size_t called, size_t next);
+    // Write Log
+    void Log(size_t src, size_t called);
 
     size_t start;
     size_t end;
     bool only_api;
     std::ofstream output;
 
-    static bool init_sym;
+    static std::once_flag init_sym;
+    static Utils::SoftwareBP global_bp;
 };
 
 #endif
