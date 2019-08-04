@@ -7,9 +7,9 @@
 
 namespace ASMSupport {
     // Disassemble and return branching address.
-    DWORD GetBranchingAddress(BYTE* opc, PCONTEXT context);
+    size_t GetBranchingAddress(BYTE* opc, PCONTEXT context);
     // Parse SIB and return next opcode pointer and branching address.
-    std::tuple<BYTE*, DWORD> SIBParser(BYTE* opc, PCONTEXT context);
+    std::tuple<BYTE*, size_t> SIBParser(BYTE* opc, PCONTEXT context);
 }
 
 #endif

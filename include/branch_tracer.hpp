@@ -11,7 +11,7 @@
 // Implementation of branch tracer.
 struct BranchTracer : Tracer {
     // Constructor.
-    BranchTracer(std::string filename, DWORD start, DWORD end, bool only_api = true);
+    BranchTracer(std::string filename, size_t start, size_t end, bool only_api = true);
 
     // Handle single step exception.
     void HandleSingleStep(PCONTEXT context) override;
@@ -22,10 +22,10 @@ private:
     // Trace given context.
     void Trace(PCONTEXT context);
     // Wrtie log and set bp.
-    bool LogAndBreak(DWORD src, DWORD called, DWORD next);
+    bool LogAndBreak(size_t src, size_t called, size_t next);
 
-    DWORD start;
-    DWORD end;
+    size_t start;
+    size_t end;
     bool only_api;
     std::ofstream output;
 
