@@ -46,7 +46,7 @@ void BranchTracer::Trace(PCONTEXT context) {
 
         // if instruction jump to windows api
         if (jmp_call(called_opc)) {
-            auto[called_next, retn] = ASMSupport::GetBranchingAddress(opc, context);
+            auto[called_next, retn] = ASMSupport::GetBranchingAddress(called_opc, context);
             Log(context->RegisterIp, called_next);
 
             if (!(start <= called_next && called_next <= end)) {
