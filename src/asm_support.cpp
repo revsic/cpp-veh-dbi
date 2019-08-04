@@ -40,8 +40,7 @@ namespace ASMSupport {
 
                 opc = parsed_opc;
                 called = parsed_called;
-            }
-            else {
+            } else {
                 called = context->RegisterSp;
             }
             break;
@@ -53,8 +52,7 @@ namespace ASMSupport {
                 called = *reinterpret_cast<long*>(opc + 2);
 #endif
                 opc += 4;
-            }
-            else {
+            } else {
                 called = context->RegisterBp;
             }
             break;
@@ -69,8 +67,7 @@ namespace ASMSupport {
         if (mod == 0x1) { //binary 01
             called += static_cast<char>(opc[2]);
             ++opc;
-        }
-        else if (mod == 0x2) { //binary 10
+        } else if (mod == 0x2) { //binary 10
             called += *reinterpret_cast<long*>(opc + 2);
             opc += 4;
         }
@@ -82,8 +79,7 @@ namespace ASMSupport {
         size_t next = 0;
         if (reg == 2 || reg == 3) { //binary 010 (near call) , 011 (far call)
             next = reinterpret_cast<size_t>(opc + 2);
-        }
-        else if (reg == 4 || reg == 5) { //binary 100 (near jmp) , 101 (far jmp)
+        } else if (reg == 4 || reg == 5) { //binary 100 (near jmp) , 101 (far jmp)
             next = *reinterpret_cast<size_t*>(context->RegisterSp);
         }
 
