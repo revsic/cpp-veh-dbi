@@ -21,12 +21,15 @@ void Debugger::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> trace
 
 // Set initial breakpoints.
 void Debugger::SetInitialBreakPoint(size_t start, size_t end) {
+    // add bp on specified address for handlers
     for (auto const&[addr, value] : handlers) {
         bps.Set(addr);
     }
 
+    // set default start, end address based on text section
     auto[text_start, text_end] = Utils::GetTextSectionAddress();
     for (auto&[start, end, handler] : tracers) {
+        // if start address is not specified
         if (start == 0) {
             start = text_start;
             end = text_end;
@@ -94,7 +97,7 @@ long WINAPI Debugger::veh_handler(PEXCEPTION_POINTERS exception) {
                 handler->HandleBreakpoint(context, bps);
 
                 // for checking side effect
-                if (reinterpret_cast<BYTE*>(context->RegisterIp) != 0xCC) {
+                if (*reinterpret_cast<BYTE*>(context->RegisterIp) != 0xCC) {
                     processed = true;
                 }
             }
