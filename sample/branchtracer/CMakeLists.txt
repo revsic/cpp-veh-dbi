@@ -3,8 +3,6 @@ project(branchtracer)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(helper helper.cpp)
-
 add_library(branchtracer SHARED dllmain.cpp)
 include_directories(${CMAKE_SOURCE_DIR}/../lib/include)
 
