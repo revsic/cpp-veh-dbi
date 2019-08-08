@@ -1,7 +1,7 @@
 # cpp-veh-dbi
 C++ Implementation of VEH based windows dynamic binary instrumentation
 
-- Copyright (c) 2019 YoungJoong Kim, cpp-veh-debugger is licensed under the [MIT license](./LICENSE).
+- Copyright (c) 2019 YoungJoong Kim, cpp-veh-dbi is licensed under the [MIT license](./LICENSE).
 - This repository aims to write programmable VEH based DBI tool.
 
 ## Environments
