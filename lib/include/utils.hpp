@@ -26,6 +26,8 @@ namespace Utils {
 
     // Get entry point address.
     size_t GetEntryPointAddress();
+    // Get text section address.
+    std::tuple<size_t, size_t> GetTextSectionAddress();
 }
 
 #endif

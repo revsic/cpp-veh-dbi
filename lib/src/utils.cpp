@@ -122,4 +122,33 @@ namespace Utils {
         size_t entrypoint = reinterpret_cast<size_t>(entry.modBaseAddr) + opthdr->AddressOfEntryPoint;
         return entrypoint;
     }
+
+    // Get text section address.
+    std::tuple<size_t, size_t> GetTextSectionAddress() {
+        MODULEENTRY32W entry;
+        entry.dwSize = sizeof(entry);
+
+        HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+
+        Module32FirstW(snapshot, &entry);
+        CloseHandle(snapshot);
+
+        PIMAGE_DOS_HEADER doshdr = reinterpret_cast<PIMAGE_DOS_HEADER>(entry.modBaseAddr);
+        PIMAGE_NT_HEADERS nthdr = ImageNtHeader(doshdr);
+        PIMAGE_SECTION_HEADER section = reinterpret_cast<PIMAGE_SECTION_HEADER>(nthdr + 1);
+
+        DWORD entrypoint = nthdr->OptionalHeader.AddressOfEntryPoint;
+
+        DWORD num_sections = nthdr->FileHeader.NumberOfSections;
+        for (DWORD i = 0; i < num_sections; ++i) {
+            size_t start = section->VirtualAddress;
+            size_t end = start + section->SizeOfRawData;
+
+            if (start <= entrypoint && entrypoint <= end) {
+                return std::make_tuple(start, end);
+            }
+            ++section;
+        }
+        return std::make_tuple(0, 0);    
+    }
 }
