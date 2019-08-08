@@ -48,10 +48,8 @@ void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
         return false;
     };
 
-    auto handle_api = [&, this](BYTE* opc) {
-        auto[called, retn] = ASMSupport::GetBranchingAddress(opc, context);
+    auto log_and_break = [&, this](size_t called, size_t retn) {
         Log(context->RegisterIp, called);
-
         if (!(start <= called && called <= end)) {
             bp.Set(retn);
             bp_set = true;
@@ -67,12 +65,14 @@ void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
 
         // if instruction jump to windows api
         if (jmp_call(called_opc)) {
-            handle_api(called_opc);
+            auto[api, retn] = ASMSupport::GetBranchingAddress(called_opc, context);
+            log_and_break(api, context->RegisterIp + 5);
         } else if (!only_api) {
             Log(context->RegisterIp, called);
         }
     } else if (jmp_call(opc)) {
-        handle_api(opc);
+        auto[called, retn] = ASMSupport::GetBranchingAddress(opc, context);
+        log_and_break(called, retn);
     }
 
     if (!bp_set) {
