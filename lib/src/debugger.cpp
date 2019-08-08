@@ -5,12 +5,12 @@ Debugger Debugger::dbg;
 
 // Add handler to the debugger.
 void Debugger::AddHandler(size_t target, std::unique_ptr<Handler> handler) {
-    handlers[target] = std::move(handler);
+    handlers.emplace(target, std::move(handler));
 }
 
 // Add tracer to the debugger.
 void Debugger::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer) {
-    tracers.emplace_back(start, end, std::move(tracer));
+    tracers.push_back({start, end, std::move(tracer)});
 }
 
 // Set initial breakpoints.
