@@ -3,3 +3,9 @@
 
 # build
 build
+
+# bin
+bin
+
+# test log file
+log.txt
