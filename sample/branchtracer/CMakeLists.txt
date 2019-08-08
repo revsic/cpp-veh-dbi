@@ -7,4 +7,4 @@ add_library(branchtracer SHARED dllmain.cpp)
 include_directories(${CMAKE_SOURCE_DIR}/lib/include)
 
 set(LIBRARY_DIRECTORY ${CMAKE_BINARY_DIR}/lib/Release)
-target_link_libraries(branchtracer ${LIBRARY_DIRECTORY}/libvehdbg.lib)
+target_link_libraries(branchtracer Dbghelp.lib ${LIBRARY_DIRECTORY}/libvehdbg.lib)
