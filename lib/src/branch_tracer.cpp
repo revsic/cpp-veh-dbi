@@ -13,6 +13,17 @@ BranchTracer::BranchTracer(std::string filename, size_t start, size_t end, bool 
     std::call_once(init_sym, []{ SymInitialize(GetCurrentProcess(), NULL, TRUE); });
 }
 
+// Text section based tracer.
+BranchTracer::BranchTracer(std::string filename, bool only_api) :
+    only_api(only_api), output(filename)
+{
+    auto[text_start, text_end] = Utils::GetTextSectionAddress();
+    start = text_start;
+    end = text_end;
+
+    std::call_once(init_sym, []{ SymInitialize(GetCurrentProcess(), NULL, TRUE); });
+}
+
 // Handle single step exception.
 void BranchTracer::HandleSingleStep(PCONTEXT context, Utils::SoftwareBP& bp) {
     Trace(context, bp);

@@ -14,6 +14,8 @@
 struct BranchTracer : Tracer {
     // Constructor.
     BranchTracer(std::string filename, size_t start, size_t end, bool only_api = true);
+    // Text section based tracer.
+    BranchTracer(std::string filename, bool only_api = true);
 
     // Handle single step exception.
     void HandleSingleStep(PCONTEXT context, Utils::SoftwareBP& bp) override;
