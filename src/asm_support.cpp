@@ -13,7 +13,7 @@ namespace ASMSupport {
         DI = 7,
     };
 
-    // Disassemble and return branching address.
+    // Disassemble and return branching address and return address.
     std::tuple<size_t, size_t> GetBranchingAddress(BYTE* opc, PCONTEXT context) {
         BYTE mod = opc[1] >> 0x6; // high 2bits
         BYTE reg = (opc[1] >> 0x3) & 0x7; // mid 3bits
@@ -76,14 +76,14 @@ namespace ASMSupport {
             called = *reinterpret_cast<size_t*>(called);
         }
 
-        size_t next = 0;
+        size_t retn = 0;
         if (reg == 2 || reg == 3) { //binary 010 (near call) , 011 (far call)
-            next = reinterpret_cast<size_t>(opc + 2);
+            retn = reinterpret_cast<size_t>(opc + 2);
         } else if (reg == 4 || reg == 5) { //binary 100 (near jmp) , 101 (far jmp)
-            next = *reinterpret_cast<size_t*>(context->RegisterSp);
+            retn = *reinterpret_cast<size_t*>(context->RegisterSp);
         }
 
-        return std::make_tuple(called, next);
+        return std::make_tuple(called, retn);
     }
 
     // Parse SIB and return next opcode pointer and branching address.
