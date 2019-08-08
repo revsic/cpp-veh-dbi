@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include <DbgHelp.h>
 #include <Psapi.h>
 #include <TlHelp32.h>
@@ -34,7 +35,8 @@ namespace Utils {
                     wname = entry.szModule;
                     res.assign(wname.begin(), wname.end());
 
-                    if (SymLoadModule(process, NULL, res.c_str(), 0, info.lpBaseOfDll, 0) || !GetLastError()) {
+                    size_t dllbase = reinterpret_cast<size_t>(info.lpBaseOfDll);
+                    if (SymLoadModule(process, NULL, res.c_str(), 0, dllbase, 0) || !GetLastError()) {
                         load_module = true;
                     }
                     break;
@@ -57,7 +59,7 @@ namespace Utils {
         symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
         symbol->MaxNameLength = MAX_SYM_NAME;
 
-        DWORD disp;
+        size_t disp;
         if (SymGetSymFromAddr(GetCurrentProcess(), address, &disp, symbol)) {
             name = symbol->Name;
         }
@@ -119,21 +121,5 @@ namespace Utils {
 
         size_t entrypoint = reinterpret_cast<size_t>(entry.modBaseAddr) + opthdr->AddressOfEntryPoint;
         return entrypoint;
-    }
-
-    // Get text section address.
-    std::tuple<size_t, size_t> GetTextSectionAddress() {
-
-        DWORD num_sections = nt_header->FileHeader.NumberOfSections;
-        for (DWORD i = 0; i < num_sections; ++i) {
-            size_t start = section_header->VirtualAddress;
-            size_t end = start + section_header->SizeOfRawData;
-
-            if (start <= entrypoint && entrypoint <= end) {
-                return std::make_tuple(start, end);
-            }
-            ++section_header;
-        }
-        return std::make_tuple(0, 0);    
     }
 }
