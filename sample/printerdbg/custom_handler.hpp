@@ -70,16 +70,18 @@ struct WriteFileHook : Handler {
 
 class Status {
 public:
-    int total = 0;
-    int pre_discount = 0;
-    int remain = 0;
+    Status();
 
-    int num_receive = 0;
-    int cash_receive = 0;
-    int card_receive = 0;
+    int total;
+    int pre_discount;
+    int remain;
 
-    int discount = 0;
-    int exchange = 0;
+    int num_receive;
+    int cash_receive;
+    int card_receive;
+
+    int discount;
+    int exchange;
 
     std::vector<std::tuple<std::string, int>> menus;
 
@@ -90,14 +92,10 @@ public:
     void Call(Process from, Process to, PCONTEXT context);
 
 private:
-    Process m_latest = Process::INVALID;
-    Process m_lastMethod = Process::INVALID;
+    Process m_latest;
+    Process m_lastMethod;
 
-    std::unordered_map<Process, std::unique_ptr<Handler>> m_list = {
-        { Process::BTN_SALE_CLICK, std::make_unique<BtnSaleClickHandler>() },
-        { Process::BTN_CASH_CLICK, std::make_unique<BtnCashClickHandler>() },
-        { Process::BTN_CREDIT_CARD_CLICK, std::make_unique<BtnCreditCardClickHandler>() },
-    };
+    std::unordered_map<Process, std::unique_ptr<Handler>> m_list;
 };
 
 #endif

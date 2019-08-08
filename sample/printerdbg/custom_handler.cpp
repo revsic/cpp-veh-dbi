@@ -8,9 +8,9 @@ double convert(BYTE* dump)
     BYTE data[10] = { 0, };
     std::copy(dump, dump + 10, data);
 
-    double cash;
-    __asm fld tbyte ptr[data];
-    __asm fstp qword ptr[cash];
+    double cash = 0;
+    // __asm fld tbyte ptr[data];
+    // __asm fstp qword ptr[cash];
 
     return cash;
 }
@@ -25,7 +25,7 @@ void BtnSaleClickHandler::Handle(PCONTEXT context)
     if (status.GetLatestProcess() == Process::MODIFY_DOUBLE)
     {
         BYTE* dump = (BYTE*)(context->Rbp + 8);
-        int cash = convert(dump);
+        int cash = static_cast<int>(convert(dump));
 
         if (m_flag == Flag::RESET)
         {
@@ -80,7 +80,7 @@ void BtnCashClickHandler::Handle(PCONTEXT context)
         }
 
         BYTE* dump = (BYTE*)(context->Rbp + 8);
-        int cash = convert(dump);
+        int cash = static_cast<int>(convert(dump));
 
         if (status.num_receive != 1)
         {
@@ -111,7 +111,7 @@ void BtnCreditCardClickHandler::Handle(PCONTEXT context)
     if (status.GetLatestProcess() == Process::MODIFY_DOUBLE)
     {
         BYTE* dump = (BYTE*)(context->Rbp + 8);
-        int cash = convert(dump);
+        int cash = static_cast<int>(convert(dump));
 
         if (m_pass && m_stack > 0)
         {
@@ -193,7 +193,7 @@ void MenuClickHandler::Handle(PCONTEXT context)
     const char* wMenuName = *(const char**)(context->Rbp - 0x14);
 
     BYTE* dump = (BYTE*)(context->Rsp);
-    int total = convert(dump);
+    int total = static_cast<int>(convert(dump));
 
     int price = total - status.total;
     status.total = total;
@@ -235,6 +235,15 @@ void WriteFileHook::Handle(PCONTEXT context)
     for (size_t i = 0; i < size; ++i) {
         printf("%c", pBuffer[i]);
     }
+}
+
+Status::Status() : total(0), pre_discount(0), remain(0),
+    num_receive(0), cash_receive(0), card_receive(0), discount(0), exchange(0),
+    m_latest(Process::INVALID), m_lastMethod(Process::INVALID)
+{
+    m_list.emplace(Process::BTN_SALE_CLICK, std::make_unique<BtnSaleClickHandler>());
+    m_list.emplace(Process::BTN_CASH_CLICK, std::make_unique<BtnCashClickHandler>());
+    m_list.emplace(Process::BTN_CREDIT_CARD_CLICK, std::make_unique<BtnCreditCardClickHandler>());
 }
 
 Process Status::GetLatestProcess() const
