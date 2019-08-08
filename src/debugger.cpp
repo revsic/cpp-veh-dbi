@@ -14,24 +14,39 @@ void Debugger::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> trace
 }
 
 // Set initial breakpoints.
-void Debugger::SetInitialBreakPoint(size_t start, size_t end) {
+void Debugger::SetInitialBreakPoint() {
     // add bp on specified address for handlers
     for (auto const&[addr, value] : handlers) {
         bps.Set(addr);
     }
 
-    // set default start, end address based on text section
-    auto[text_start, text_end] = Utils::GetTextSectionAddress();
+    // set default start point as entrypoint
+    size_t entrypoint = Utils::GetEntryPointAddress();
+    // add bp on specified address for tracers
     for (auto& pack : tracers) {
-        // if start address is not specified
         if (pack.start == 0) {
-            pack.start = text_start;
-            pack.end = text_end;
+            pack.start = entrypoint;
         }
 
         bps.Set(pack.start);
-        bps.Set(pack.end);
+        if (pack.end != 0) {
+            bps.Set(pack.end);
+        }
     }
+}
+
+// Run debugger.
+void Debugger::Run() {
+    // set breakpoint on entrypoint
+    size_t entrypoint = Utils::GetEntryPointAddress();
+    bps.Set(entrypoint);
+
+    // set current debuger as global context
+    SetDebugger(*this);
+    // set initial breakpoints
+    SetInitialBreakPoint();
+    // add debugger veh handler
+    AddVectoredExceptionHandler(1, DebugHandler);
 }
 
 // Set debugger.
@@ -39,6 +54,7 @@ void Debugger::SetDebugger(Debugger const& debugger) {
     dbg = debugger;
 }
 
+// Handle single step exception.
 void Debugger::HandleSingleStep(PCONTEXT context) {
     // rewrite breakpoint
     if (dbg.last_bp) {
@@ -55,7 +71,7 @@ void Debugger::HandleSingleStep(PCONTEXT context) {
         ++iter;
     }
 }
-
+// Handle breakpoint exception.
 bool Debugger::HandleBreakpoint(PCONTEXT context) {
     bool processed = false;
     auto recover = [&] {

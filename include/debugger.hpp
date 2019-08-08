@@ -20,7 +20,10 @@ struct Debugger {
     void AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer);
 
     // Set initial breakpoints.
-    void SetInitialBreakPoint(size_t start, size_t end);
+    void SetInitialBreakPoint();
+
+    // Run debugger.
+    void Run();
 
     // Set debugger.
     static void SetDebugger(Debugger const& debugger);
