@@ -2,7 +2,7 @@
 C++ Implementation of VEH based windows dynamic binary instrumentation
 
 - Copyright (c) 2019 YoungJoong Kim, cpp-veh-dbi is licensed under the [MIT license](./LICENSE).
-- This repository aims to write programmable VEH based DBI tool.
+- This repository aims to write simple and fast programmable DBI tool.
 
 ## Environments
 Tested environments
