@@ -89,11 +89,11 @@ void BranchTracer::Log(size_t src, size_t called) {
         auto[load_module, module_name] = Utils::GetModuleNameByAddr(called);
         if (load_module) {
             std::string symbol_name = Utils::GetSymbolName(called);
-            output << '+' << src_ptr << ',' << called_ptr << ',' << module_name << ',' << symbol_name << "\r\n";
+            output << '+' << src_ptr << ',' << called_ptr << ',' << module_name << ',' << symbol_name << std::endl;
         } else {
-            output << '+' << src_ptr << ',' << called_ptr << ",,\r\n";
+            output << '+' << src_ptr << ',' << called_ptr << ",," << std::endl;
         }
     } else if (!only_api) {
-        output << '+' << src_ptr << ',' << called_ptr << ",,\r\n";
+        output << '+' << src_ptr << ',' << called_ptr << ",," << std::endl;
     }
 }
