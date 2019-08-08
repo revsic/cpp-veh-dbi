@@ -20,6 +20,7 @@ namespace ASMSupport {
         RnM rnm = static_cast<RnM>(opc[1] & 0x7); // low 3bits
 
         size_t called = 0;
+        size_t register_ip = reinterpret_cast<size_t>(opc);
 
         switch (rnm) {
         case RnM::AX: 
@@ -47,7 +48,7 @@ namespace ASMSupport {
         case RnM::BP:
             if (mod == 0x00) {
 #ifdef _WIN64
-                called = context->RegisterIp + *reinterpret_cast<long*>(opc + 2) + 6;
+                called = register_ip + *reinterpret_cast<long*>(opc + 2) + 6;
 #else
                 called = *reinterpret_cast<long*>(opc + 2);
 #endif
@@ -105,7 +106,7 @@ namespace ASMSupport {
         case RnM::DI: called = context->RegisterDi; break;
         }
 
-        called = called * (1 << scale);
+        called = called * (1LL << scale);
 
         switch (base) {
         case RnM::AX: called += static_cast<long>(context->RegisterAx); break;
