@@ -3,6 +3,10 @@
 
 Debugger Debugger::dbg;
 
+Debugger::Debugger() : bps(), last_bp(0), trace_flag(0), handlers(), tracers() {
+    // Do nothing
+}
+
 // Add handler to the debugger.
 void Debugger::AddHandler(size_t target, std::unique_ptr<Handler> handler) {
     handlers.emplace(target, std::move(handler));

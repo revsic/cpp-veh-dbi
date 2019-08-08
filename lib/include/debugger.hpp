@@ -14,6 +14,9 @@
 
 // VEH based debugger.
 struct Debugger {
+    // Constructor.
+    Debugger();
+
     // Add handler to the debugger.
     void AddHandler(size_t target, std::unique_ptr<Handler> handler);
     // Add tracer to the debugger.
@@ -46,7 +49,7 @@ private:
         trace_flag ^= (1LL << idx);
     }
     // Check tracer set.
-    inline bool CheckTracer(size_t idx) {
+    inline bool CheckTracer(size_t idx) const {
         return (dbg.trace_flag >> idx) & 1;
     }
 
