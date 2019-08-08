@@ -2,12 +2,8 @@
 #include <iostream>
 
 int wmain(int argc, wchar_t *argv[]) {
-    if (argc < 3) {
-        std::cout << "usage: helper [TARGET] [DLLPATH]" << std::endl;
-    }
-
-    WCHAR *target = argv[0];
-    WCHAR *lib = argv[1];
+    WCHAR *target = argv[1];
+    WCHAR *lib = argv[2];
 
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
