@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include <DbgHelp.h>
 
 #include <asm_support.hpp>
