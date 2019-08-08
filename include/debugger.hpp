@@ -15,24 +15,52 @@
 // VEH based debugger.
 struct Debugger {
     // Add handler to the debugger.
-    static void AddHandler(size_t target, std::string const& name, std::unique_ptr<Handler> handler);
+    void AddHandler(size_t target, std::unique_ptr<Handler> handler);
     // Add tracer to the debugger.
-    static void AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer);
+    void AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer);
 
     // Set initial breakpoints.
-    static void SetInitialBreakPoint(size_t start, size_t end);
+    void SetInitialBreakPoint(size_t start, size_t end);
 
+    // Set debugger.
+    static void SetDebugger(Debugger const& debugger);
     // Real VEH handler.
-    static long WINAPI veh_handler(PEXCEPTION_POINTERS exception);
+    static long WINAPI DebugHandler(PEXCEPTION_POINTERS exception);
 
 private:
-    static Utils::SoftwareBP bps;
-    
-    static size_t last_bp;
-    static size_t trace_flag;
+    static Debugger dbg;
 
-    static std::unordered_map<size_t, std::tuple<std::string, std::unique_ptr<Handler>>> handlers;
-    static std::vector<std::tuple<size_t, size_t, std::unique_ptr<Tracer>>> tracers;
+    // Handle single step exception.
+    static void HandleSingleStep(PCONTEXT context);
+    // Handle breakpoint exception.
+    static bool HandleBreakpoint(PCONTEXT context);
+
+    // Set tracer flag.
+    inline void SetTracer(size_t idx) {
+        trace_flag |= (1 << idx);
+    }
+    // Release tracer flag.
+    inline void ReleaseTracer(size_t idx) {
+        trace_flag ^= (1 << idx);
+    }
+    // Check tracer set.
+    inline bool CheckTracer(size_t idx) {
+        return (dbg.trace_flag >> idx) & 1;
+    }
+
+    Utils::SoftwareBP bps;
+    
+    size_t last_bp;
+    size_t trace_flag;
+
+    struct TracerPack {
+        size_t start;
+        size_t end;
+        std::unique_ptr<Tracer> tracer;
+    };
+
+    std::unordered_map<size_t, std::unique_ptr<Handler>> handlers;
+    std::vector<TracerPack> tracers;
 };
 
 #endif
