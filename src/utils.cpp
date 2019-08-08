@@ -103,8 +103,8 @@ namespace Utils {
         return false;
     }
     
-    // Get text section address.
-    std::tuple<size_t, size_t> GetTextSectionAddress() {
+    // Get entry point address.
+    size_t GetEntryPointAddress() {
         MODULEENTRY32W entry;
         entry.dwSize = sizeof(entry);
 
@@ -113,11 +113,16 @@ namespace Utils {
         Module32FirstW(snapshot, &entry);
         CloseHandle(snapshot);
 
-        PIMAGE_DOS_HEADER dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(entry.modBaseAddr);
-        PIMAGE_NT_HEADERS nt_header = ImageNtHeader(dos_header);
-        PIMAGE_SECTION_HEADER section_header = reinterpret_cast<PIMAGE_SECTION_HEADER>(nt_header + 1);
+        PIMAGE_DOS_HEADER doshdr = reinterpret_cast<PIMAGE_DOS_HEADER>(entry.modBaseAddr);
+        PIMAGE_NT_HEADERS nthdr = ImageNtHeader(doshdr);
+        PIMAGE_OPTIONAL_HEADER opthdr = &nthdr->OptionalHeader;
 
-        DWORD entrypoint = nt_header->OptionalHeader.AddressOfEntryPoint;
+        size_t entrypoint = reinterpret_cast<size_t>(entry.modBaseAddr) + opthdr->AddressOfEntryPoint;
+        return entrypoint;
+    }
+
+    // Get text section address.
+    std::tuple<size_t, size_t> GetTextSectionAddress() {
 
         DWORD num_sections = nt_header->FileHeader.NumberOfSections;
         for (DWORD i = 0; i < num_sections; ++i) {

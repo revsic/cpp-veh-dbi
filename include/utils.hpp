@@ -24,8 +24,8 @@ namespace Utils {
         std::unordered_map<size_t, std::tuple<BYTE, bool>> bp;
     };
 
-    // Get text section address.
-    std::tuple<size_t, size_t> GetTextSectionAddress();
+    // Get entry point address.
+    size_t GetEntryPointAddress();
 }
 
 #endif
