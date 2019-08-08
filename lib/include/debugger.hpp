@@ -23,10 +23,9 @@ struct Debugger {
     void SetInitialBreakPoint();
 
     // Run debugger.
-    void Run();
-
+    static void Run(Debugger&& debugger);
     // Set debugger.
-    static void SetDebugger(Debugger const& debugger);
+    static void SetDebugger(Debugger&& debugger);
     // Real VEH handler.
     static long WINAPI DebugHandler(PEXCEPTION_POINTERS exception);
 
@@ -40,11 +39,11 @@ private:
 
     // Set tracer flag.
     inline void SetTracer(size_t idx) {
-        trace_flag |= (1 << idx);
+        trace_flag |= (1LL << idx);
     }
     // Release tracer flag.
     inline void ReleaseTracer(size_t idx) {
-        trace_flag ^= (1 << idx);
+        trace_flag ^= (1LL << idx);
     }
     // Check tracer set.
     inline bool CheckTracer(size_t idx) {

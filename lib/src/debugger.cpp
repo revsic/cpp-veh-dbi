@@ -36,22 +36,22 @@ void Debugger::SetInitialBreakPoint() {
 }
 
 // Run debugger.
-void Debugger::Run() {
+void Debugger::Run(Debugger&& debugger) {
+    // set initial breakpoints
+    debugger.SetInitialBreakPoint();
     // set breakpoint on entrypoint
     size_t entrypoint = Utils::GetEntryPointAddress();
-    bps.Set(entrypoint);
-
-    // set current debuger as global context
-    SetDebugger(*this);
-    // set initial breakpoints
-    SetInitialBreakPoint();
+    debugger.bps.Set(entrypoint);
+    
+    // set debuger as global context
+    SetDebugger(std::move(debugger));
     // add debugger veh handler
     AddVectoredExceptionHandler(1, DebugHandler);
 }
 
 // Set debugger.
-void Debugger::SetDebugger(Debugger const& debugger) {
-    dbg = debugger;
+void Debugger::SetDebugger(Debugger&& debugger) {
+    dbg = std::move(debugger);
 }
 
 // Handle single step exception.
