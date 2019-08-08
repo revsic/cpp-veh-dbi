@@ -4,9 +4,11 @@
 #include <debugger.hpp>
 
 Debugger CreateDebugger() {
+    // allocate console
+    AllocConsole();
     // create debugger
     Debugger dbg;
-    dbg.AddTracer(0, 0, std::make_unique<BranchTracer>("./log.txt"));
+    dbg.AddTracer(0, 0, std::make_unique<BranchTracer>("CONOUT$"));
     return std::move(dbg);
 }
 
