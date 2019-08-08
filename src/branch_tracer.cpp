@@ -26,8 +26,6 @@ void BranchTracer::HandleBreakpoint(PCONTEXT context, Utils::SoftwareBP& bp) {
 // Trace given context.
 void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
     bool bp_set = false;
-    BYTE* opc = reinterpret_cast<BYTE*>(context->RegisterIp);
-
     auto jmp_call = [](BYTE* opc) {
         if (opc[0] == 0xFF) {
             BYTE reg = (opc[1] >> 0x3) & 0x7;
@@ -38,24 +36,7 @@ void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
         return false;
     };
 
-    // instruction call
-    if (opc[0] == 0xE8) {
-        size_t called = context->RegisterIp + *reinterpret_cast<long*>(opc + 1) + 5;
-        BYTE* called_opc = reinterpret_cast<BYTE*>(called);
-
-        // if instruction jump to windows api
-        if (jmp_call(called_opc)) {
-            auto[called_next, retn] = ASMSupport::GetBranchingAddress(called_opc, context);
-            Log(context->RegisterIp, called_next);
-
-            if (!(start <= called_next && called_next <= end)) {
-                bp.Set(retn);
-                bp_set = true;
-            }
-        } else if (!only_api) {
-            Log(context->RegisterIp, called);
-        }
-    } else if (jmp_call(opc)) {
+    auto handle_api = [&, this](BYTE* opc) {
         auto[called, retn] = ASMSupport::GetBranchingAddress(opc, context);
         Log(context->RegisterIp, called);
 
@@ -63,6 +44,23 @@ void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
             bp.Set(retn);
             bp_set = true;
         }
+    };
+
+    BYTE* opc = reinterpret_cast<BYTE*>(context->RegisterIp);
+
+    // instruction call
+    if (opc[0] == 0xE8) {
+        size_t called = context->RegisterIp + *reinterpret_cast<long*>(opc + 1) + 5;
+        BYTE* called_opc = reinterpret_cast<BYTE*>(called);
+
+        // if instruction jump to windows api
+        if (jmp_call(called_opc)) {
+            handle_api(called_opc);
+        } else if (!only_api) {
+            Log(context->RegisterIp, called);
+        }
+    } else if (jmp_call(opc)) {
+        handle_api(opc);
     }
 
     if (!bp_set) {
