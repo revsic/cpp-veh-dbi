@@ -48,7 +48,7 @@ namespace Utils {
     }
 
     // Get symbol name of given address.
-    std::string GetSymbolName(size_t called) {
+    std::string GetSymbolName(size_t address) {
         std::string name;
         auto buffer = std::make_unique<BYTE[]>(sizeof(IMAGEHLP_SYMBOL) + MAX_SYM_NAME);
         auto symbol = reinterpret_cast<IMAGEHLP_SYMBOL*>(buffer.get());
@@ -58,7 +58,7 @@ namespace Utils {
         symbol->MaxNameLength = MAX_SYM_NAME;
 
         DWORD disp;
-        if (SymGetSymFromAddr(GetCurrentProcess(), called, &disp, symbol)) {
+        if (SymGetSymFromAddr(GetCurrentProcess(), address, &disp, symbol)) {
             name = symbol->Name;
         }
 

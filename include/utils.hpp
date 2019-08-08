@@ -10,7 +10,7 @@ namespace Utils {
     // Get module name which includes given address.
     std::tuple<bool, std::string> GetModuleNameByAddr(size_t address);
     // Get symbol name of given address.
-    std::string GetSymbolName(size_t called);
+    std::string GetSymbolName(size_t address);
 
     // Set trap flag.
     void SetSingleStep(PCONTEXT context);
