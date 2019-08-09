@@ -56,7 +56,9 @@ size_t entrypoint = Utils::GetEntryPointAddress();
 dbi.AddHandler(entrypoint, std::make_unique<EntrypointHandler>());
 ```
 
-`Handler` only require one method.
+`VehDBI::AddHandler` get two arguments, address(`size_t`) and handler (`std::unique_ptr<Handler>`).
+
+`Handler` require only one method, which will be invoked in specified address.
 ```c++
 // Interface for debug event handler.
 struct Handler {
@@ -87,7 +89,7 @@ struct Tracer {
 };
 ```
 
-`VehDBI::AddTracer` get three arguments, tracer start point, end point and tracer.
+`VehDBI::AddTracer` get three arguments, tracer start point(`size_t`), end point(`size_t`) and tracer(`std::unique_ptr<Tracer>`).
 - If start point is 0, dbi automatically start tracer on entrypoint.
 - If end point is 0, tracer doesn't stop until process termination.
 ```c++
@@ -112,7 +114,7 @@ Which is same with `VehDBI::AddBTCallback`, if tracer (start, end) point is (0, 
 dbi.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
 ```
 
-`BTCallback` require only one method.
+`BTCallback` require only one method, which will be invoked on every instruction.
 ```c++
 // Callback for branch tracer.
 struct BTCallback {
