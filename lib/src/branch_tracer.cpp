@@ -7,16 +7,14 @@
 std::once_flag BranchTracer::init_sym;
 
 // Constructor.
-BranchTracer::BranchTracer(std::string filename, size_t start, size_t end, bool only_api) :
-    start(start), end(end), only_api(only_api), output(filename)
+BranchTracer::BranchTracer(size_t start, size_t end, std::unique_ptr<BTCallback> callback) :
+    start(start), end(end), callback(std::move(callback))
 {
     std::call_once(init_sym, []{ SymInitialize(GetCurrentProcess(), NULL, TRUE); });
 }
 
 // Text section based tracer.
-BranchTracer::BranchTracer(std::string filename, bool only_api) :
-    only_api(only_api), output(filename)
-{
+BranchTracer::BranchTracer(std::unique_ptr<BTCallback> callback) : callback(std::move(callback)) {
     auto[text_start, text_end] = Utils::GetTextSectionAddress();
     start = text_start;
     end = text_end;
@@ -48,14 +46,14 @@ void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
         return false;
     };
 
-    auto log_and_break = [&, this](size_t called, size_t retn) {
-        Log(context->RegisterIp, called);
+    auto bp_on_retn = [&, this](size_t called, size_t retn) {
         if (!(start <= called && called <= end)) {
             bp.Set(retn);
             bp_set = true;
         }
     };
 
+    BTInfo info;
     BYTE* opc = reinterpret_cast<BYTE*>(context->RegisterIp);
 
     // instruction call
@@ -63,37 +61,32 @@ void BranchTracer::Trace(PCONTEXT context, Utils::SoftwareBP& bp) {
         size_t called = context->RegisterIp + *reinterpret_cast<long*>(opc + 1) + 5;
         BYTE* called_opc = reinterpret_cast<BYTE*>(called);
 
+        // set brancing information
+        info = BTInfo{context->RegisterIp, called, context->RegisterIp + 5, true, false};
+
         // if instruction jump to windows api
         if (jmp_call(called_opc)) {
             auto[api, retn] = ASMSupport::GetBranchingAddress(called_opc, context);
-            log_and_break(api, context->RegisterIp + 5);
-        } else if (!only_api) {
-            Log(context->RegisterIp, called);
+            bp_on_retn(api, context->RegisterIp + 5);
+
+            // set for ff branch
+            info.ff_branch = true;
+            info.called = api;
         }
     } else if (jmp_call(opc)) {
         auto[called, retn] = ASMSupport::GetBranchingAddress(opc, context);
-        log_and_break(called, retn);
+        bp_on_retn(called, retn);
+
+        // set brancing information
+        info = BTInfo{context->RegisterIp, called, retn, false, true};
+    }
+
+    // callback
+    if (callback != nullptr) {
+        callback->run(info, context);
     }
 
     if (!bp_set) {
         Utils::SetSingleStep(context);
-    }
-}
-
-// Write log.
-void BranchTracer::Log(size_t src, size_t called) {
-    void* src_ptr = reinterpret_cast<void*>(src);
-    void* called_ptr = reinterpret_cast<void*>(called);
-
-    if (!(start <= src && src <= end)) {
-        auto[load_module, module_name] = Utils::GetModuleNameByAddr(called);
-        if (load_module) {
-            std::string symbol_name = Utils::GetSymbolName(called);
-            output << '+' << src_ptr << ',' << called_ptr << ',' << module_name << ',' << symbol_name << std::endl;
-        } else {
-            output << '+' << src_ptr << ',' << called_ptr << ",," << std::endl;
-        }
-    } else if (!only_api) {
-        output << '+' << src_ptr << ',' << called_ptr << ",," << std::endl;
     }
 }

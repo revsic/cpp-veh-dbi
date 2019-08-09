@@ -3,19 +3,34 @@
 
 #include <Windows.h>
 
-#include <fstream>
 #include <mutex>
-#include <string>
 
 #include "tracer.hpp"
 #include "utils.hpp"
 
+// Branch data from branch tracer.
+struct BTInfo {
+    size_t source = 0;
+    size_t called = 0;
+    size_t retn = 0;
+    bool e8_branch = false;
+    bool ff_branch = false;
+};
+
+// Callback for branch tracer.
+struct BTCallback {
+    // Default destructor.
+    virtual ~BTCallback() = default;
+    // Callback.
+    virtual void run(BTInfo const& info, PCONTEXT context) = 0;
+};
+
 // Implementation of branch tracer.
 struct BranchTracer : Tracer {
     // Constructor.
-    BranchTracer(std::string filename, size_t start, size_t end, bool only_api = true);
+    BranchTracer(size_t start, size_t end, std::unique_ptr<BTCallback> callback = nullptr);
     // Text section based tracer.
-    BranchTracer(std::string filename, bool only_api = true);
+    BranchTracer(std::unique_ptr<BTCallback> callback = nullptr);
 
     // Handle single step exception.
     void HandleSingleStep(PCONTEXT context, Utils::SoftwareBP& bp) override;
@@ -25,13 +40,10 @@ struct BranchTracer : Tracer {
 private:
     // Trace given context.
     void Trace(PCONTEXT context, Utils::SoftwareBP& bp);
-    // Write Log
-    void Log(size_t src, size_t called);
 
     size_t start;
     size_t end;
-    bool only_api;
-    std::ofstream output;
+    std::unique_ptr<BTCallback> callback;
 
     static std::once_flag init_sym;
 };
