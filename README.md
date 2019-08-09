@@ -36,10 +36,11 @@ Then console will log the Windows API call.
 
 ## Structure
 Struct `VehDBI` has three ways to instrument binary.
-1. Handler : Trigger on specified address.
-2. Tracer : Tracing instruction with debugging event.
-3. BTCallback : Callback on every instruction in text section.
+1. [Handler](#1-handler) : Trigger on specified address.
+2. [Tracer](#2-tracer) : Tracing instruction with debugging event.
+3. [BTCallback](#3-btcallback) : Callback on every instruction in text section.
 
+### 1. Handler
 Sample handler which triggered on entrypoint.
 ```c++
 struct EntrypointHandler : Handler {
@@ -55,7 +56,36 @@ size_t entrypoint = Utils::GetEntryPointAddress();
 dbi.AddHandler(entrypoint, std::make_unique<EntrypointHandler>());
 ```
 
+`Handler` only require one method.
+```c++
+// Interface for debug event handler.
+struct Handler {
+    // Default virtual destructor.
+    virtual ~Handler() = default;
+    // Handle debug event.
+    virtual void Handle(PCONTEXT context) = 0;
+};
+```
+
+### 2. Tracer
 Sample tracer which tracing branch instruction, [branch_tracer](./lib/src/branch_tracer.cpp).
+
+`Tracer` require two methods.
+- HandleSingleStep: Handle single step exception.
+- HandleBreakpoint: Handle breakpoint exception.
+
+If tracer set software bp, `HandleBreakpoint` should recover the opcode.
+```c++
+// Interface for code trace handler.
+struct Tracer {
+    // Default virtual destructor.
+    virtual ~Tracer() = default;
+    // Handle single step exception.
+    virtual void HandleSingleStep(PCONTEXT context, Utils::SoftwareBP& bp) = 0;
+    // Handle software breakpoint exception.
+    virtual void HandleBreakpoint(PCONTEXT context, Utils::SoftwareBP& bp) = 0;
+};
+```
 
 `VehDBI::AddTracer` get three arguments, tracer start point, end point and tracer.
 - If start point is 0, dbi automatically start tracer on entrypoint.
@@ -64,6 +94,7 @@ Sample tracer which tracing branch instruction, [branch_tracer](./lib/src/branch
 dbi.AddTracer(0, 0, std::make_unique<BranchTracer>());
 ```
 
+### 3. BTCallback
 Indeed, BTCallback is callback for branch tracer, which call `BTCallback::run` at every instruction. 
 
 VehDBI basically run branch tracer on text section. And `VehDBI::AddBTCallback` add given callback to the default branch tracer. Then added callback will be invoked on every instruction in text section.
@@ -79,4 +110,15 @@ dbi.AddTracer(0, 0, std::make_unique<BranchTracer>(std::move(logger)));
 Which is same with `VehDBI::AddBTCallback`, if tracer (start, end) point is (0, 0).
 ```c++
 dbi.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
+```
+
+`BTCallback` require only one method.
+```c++
+// Callback for branch tracer.
+struct BTCallback {
+    // Default destructor.
+    virtual ~BTCallback() = default;
+    // Callback.
+    virtual void run(BTInfo const& info, PCONTEXT context) = 0;
+};
 ```
