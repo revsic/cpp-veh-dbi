@@ -10,7 +10,7 @@ struct EntrypointHandler : Handler {
 
 VehDBI CreateDBI() {
     AllocConsole();
-    // create debugger
+    // create dbi
     VehDBI dbi;
     // handler sample
     size_t entrypoint = Utils::GetEntryPointAddress();

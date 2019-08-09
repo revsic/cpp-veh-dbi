@@ -5,7 +5,7 @@
 VehDBI CreateDBI() {
     // allocate console
     AllocConsole();
-    // create debugger
+    // create dbi
     VehDBI dbi;
     dbi.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
     return std::move(dbi);
