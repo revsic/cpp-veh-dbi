@@ -54,3 +54,29 @@ VehDBI dbi;
 size_t entrypoint = Utils::GetEntryPointAddress();
 dbi.AddHandler(entrypoint, std::make_unique<EntrypointHandler>());
 ```
+
+Sample tracer which tracing branch instruction, [branch_tracer](./lib/src/branch_tracer.cpp).
+
+`VehDBI::AddTracer` get three arguments, tracer start point, end point and tracer.
+- If start point is 0, dbi automatically start tracer on entrypoint.
+- If end point is 0, tracer doesn't stop until process termination.
+```c++
+dbi.AddTracer(0, 0, std::make_unique<BranchTracer>());
+```
+
+Indeed, BTCallback is callback for branch tracer, which call `BTCallback::run` at every instruction. 
+
+VehDBI basically run branch tracer on text section. And `VehDBI::AddBTCallback` add given callback to the default branch tracer. Then added callback will be invoked on every instruction in text section.
+
+Sample BTCallback which log branch instruction, [logger](./lib/src/logger.cpp).
+```c++
+// btcallback sample
+auto logger = std::make_unique<Logger>("CONOUT$");
+// tracer sample
+dbi.AddTracer(0, 0, std::make_unique<BranchTracer>(std::move(logger)));
+```
+
+Which is same with `VehDBI::AddBTCallback`, if tracer (start, end) point is (0, 0).
+```c++
+dbi.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
+```
