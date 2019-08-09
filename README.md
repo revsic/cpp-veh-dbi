@@ -8,6 +8,7 @@ C++ Implementation of VEH based windows dynamic binary instrumentation
 Tested environments
 - Windows 10
 - Visual Studio 2019
+- CMake 3.14.0
 
 ## Usage
 To build library and samples,
