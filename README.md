@@ -33,3 +33,24 @@ Then console will log the Windows API call.
 +00007FF66FF9AE4A,00007FFCEEE513B0,msvcrt.dll,ismbblead
 +00007FF66FF9AE4A,00007FFCEEE513B0,msvcrt.dll,ismbblead
 ```
+
+## Structure
+Struct `VehDBI` has three ways to instrument binary.
+1. Handler : Trigger on specified address.
+2. Tracer : Tracing instruction with debugging event.
+3. BTCallback : Callback on every instruction in text section.
+
+Sample handler which triggered on entrypoint.
+```c++
+struct EntrypointHandler : Handler {
+    void Handle(PCONTEXT context) override {
+        std::ofstream("CONOUT$") << "trigged on entrypoint" << std::endl;
+    }
+};
+
+// create dbi
+VehDBI dbi;
+// handler sample
+size_t entrypoint = Utils::GetEntryPointAddress();
+dbi.AddHandler(entrypoint, std::make_unique<EntrypointHandler>());
+```
