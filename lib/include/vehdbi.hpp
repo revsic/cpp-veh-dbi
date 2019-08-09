@@ -3,7 +3,7 @@
 
 #include "impl/asm_support.hpp"
 #include "impl/branch_tracer.hpp"
-#include "impl/debugger.hpp"
+#include "impl/dbi.hpp"
 #include "impl/handler.hpp"
 #include "impl/logger.hpp"
 #include "impl/tracer.hpp"
