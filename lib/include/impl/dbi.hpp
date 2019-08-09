@@ -1,5 +1,5 @@
-#ifndef DEBUGGER_HPP
-#define DEBUGGER_HPP
+#ifndef DBI_HPP
+#define DBI_HPP
 
 #include <Windows.h>
 
@@ -23,30 +23,30 @@ struct MultipleBTCallback : BTCallback {
     void run(BTInfo const& info, PCONTEXT context) override;
 };
 
-// VEH based debugger.
-struct Debugger {
+// VEH based DBI.
+struct DBI {
     // Constructor.
-    Debugger();
+    DBI();
 
-    // Add handler to the debugger.
+    // Add handler to the DBI.
     void AddHandler(size_t target, std::unique_ptr<Handler> handler);
-    // Add tracer to the debugger.
+    // Add tracer to the DBI.
     void AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer);
-    // Add BTCallback to the debugger.
+    // Add BTCallback to the DBI.
     void AddBTCallback(std::unique_ptr<BTCallback> callbacks);
 
     // Set initial breakpoints.
     void SetInitialBreakPoint();
 
-    // Run debugger.
-    static void Run(Debugger&& debugger);
-    // Set debugger.
-    static void SetDebugger(Debugger&& debugger);
+    // Run DBI.
+    static void Run(DBI&& dbi);
+    // Set DBI.
+    static void SetDBI(DBI&& dbi);
     // Real VEH handler.
     static long WINAPI DebugHandler(PEXCEPTION_POINTERS exception);
 
 private:
-    static Debugger dbg;
+    static DBI dbi;
 
     // Handle single step exception.
     static void HandleSingleStep(PCONTEXT context);
@@ -63,7 +63,7 @@ private:
     }
     // Check tracer set.
     inline bool CheckTracer(size_t idx) const {
-        return (dbg.trace_flag >> idx) & 1;
+        return (trace_flag >> idx) & 1;
     }
 
     Utils::SoftwareBP bps;

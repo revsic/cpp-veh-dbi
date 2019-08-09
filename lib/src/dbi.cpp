@@ -1,8 +1,8 @@
 #include <asm_support.hpp>
 #include <branch_tracer.hpp>
-#include <debugger.hpp>
+#include <dbi.hpp>
 
-Debugger Debugger::dbg;
+DBI DBI::dbi;
 
 // Consturctor.
 MultipleBTCallback::MultipleBTCallback(std::vector<std::unique_ptr<BTCallback>> callbacks) :
@@ -21,27 +21,27 @@ void MultipleBTCallback::run(BTInfo const& info, PCONTEXT context) {
 }
 
 // Consturctor.
-Debugger::Debugger() : bps(), last_bp(0), trace_flag(0), handlers(), tracers() {
+DBI::DBI() : bps(), last_bp(0), trace_flag(0), handlers(), tracers() {
     // Do nothing
 }
 
-// Add handler to the debugger.
-void Debugger::AddHandler(size_t target, std::unique_ptr<Handler> handler) {
+// Add handler to the DBI.
+void DBI::AddHandler(size_t target, std::unique_ptr<Handler> handler) {
     handlers.emplace(target, std::move(handler));
 }
 
-// Add tracer to the debugger.
-void Debugger::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer) {
+// Add tracer to the DBI.
+void DBI::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer) {
     tracers.push_back({start, end, std::move(tracer)});
 }
 
-// Add BTCallback to the debugger.
-void Debugger::AddBTCallback(std::unique_ptr<BTCallback> callback) {
+// Add BTCallback to the DBI.
+void DBI::AddBTCallback(std::unique_ptr<BTCallback> callback) {
     btcallbacks.push_back(std::move(callback));
 }
 
 // Set initial breakpoints.
-void Debugger::SetInitialBreakPoint() {
+void DBI::SetInitialBreakPoint() {
     // add bp on specified address for handlers
     for (auto const&[addr, value] : handlers) {
         bps.Set(addr);
@@ -62,58 +62,58 @@ void Debugger::SetInitialBreakPoint() {
     }
 }
 
-// Run debugger.
-void Debugger::Run(Debugger&& debugger) {
+// Run DBI.
+void DBI::Run(DBI&& target) {
     // Add default branch tracer
-    auto btcallbacks = std::make_unique<MultipleBTCallback>(std::move(debugger.btcallbacks));
-    debugger.AddTracer(0, 0, std::make_unique<BranchTracer>(std::move(btcallbacks)));
+    auto btcallbacks = std::make_unique<MultipleBTCallback>(std::move(target.btcallbacks));
+    target.AddTracer(0, 0, std::make_unique<BranchTracer>(std::move(btcallbacks)));
 
     // set initial breakpoints
-    debugger.SetInitialBreakPoint();
+    target.SetInitialBreakPoint();
     // set breakpoint on entrypoint
     size_t entrypoint = Utils::GetEntryPointAddress();
-    debugger.bps.Set(entrypoint);
-    
-    // set debuger as global context
-    SetDebugger(std::move(debugger));
-    // add debugger veh handler
+    target.bps.Set(entrypoint);
+
+    // set target as global context
+    SetDBI(std::move(target));
+    // add DBI veh handler
     AddVectoredExceptionHandler(1, DebugHandler);
 }
 
-// Set debugger.
-void Debugger::SetDebugger(Debugger&& debugger) {
-    dbg = std::move(debugger);
+// Set DBI.
+void DBI::SetDBI(DBI&& target) {
+    dbi = std::move(target);
 }
 
 // Handle single step exception.
-void Debugger::HandleSingleStep(PCONTEXT context) {
+void DBI::HandleSingleStep(PCONTEXT context) {
     // rewrite breakpoint
-    if (dbg.last_bp) {
-        dbg.bps.Set(dbg.last_bp);
-        dbg.last_bp = 0;
+    if (dbi.last_bp) {
+        dbi.bps.Set(dbi.last_bp);
+        dbi.last_bp = 0;
     }
 
     // processing trace handler
     size_t iter = 0;
-    for (auto& pack : dbg.tracers) {
-        if (dbg.CheckTracer(iter)) {
-            pack.tracer->HandleSingleStep(context, dbg.bps);
+    for (auto& pack : dbi.tracers) {
+        if (dbi.CheckTracer(iter)) {
+            pack.tracer->HandleSingleStep(context, dbi.bps);
         }
         ++iter;
     }
 }
 // Handle breakpoint exception.
-bool Debugger::HandleBreakpoint(PCONTEXT context) {
+bool DBI::HandleBreakpoint(PCONTEXT context) {
     bool processed = false;
     auto recover = [&] {
         if (!processed) {
-            dbg.last_bp = context->RegisterIp;
-            dbg.bps.Recover(context->RegisterIp);
+            dbi.last_bp = context->RegisterIp;
+            dbi.bps.Recover(context->RegisterIp);
             processed = true;
         }
     };
 
-    if (auto iter = dbg.handlers.find(context->Rip); iter != dbg.handlers.end()) {
+    if (auto iter = dbi.handlers.find(context->Rip); iter != dbi.handlers.end()) {
         auto& handler = (*iter).second;
         handler->Handle(context);
 
@@ -122,20 +122,20 @@ bool Debugger::HandleBreakpoint(PCONTEXT context) {
     }
 
     size_t iter = 0;
-    for (auto& pack : dbg.tracers) {
+    for (auto& pack : dbi.tracers) {
         // start tracer
         if (pack.start == context->RegisterIp) {
-            dbg.SetTracer(iter);
+            dbi.SetTracer(iter);
             recover();
         }
         // finish tracer
         if (pack.end == context->RegisterIp) {
-            dbg.ReleaseTracer(iter);
+            dbi.ReleaseTracer(iter);
             recover();
         }
 
-        if (dbg.CheckTracer(iter)) {
-            pack.tracer->HandleBreakpoint(context, dbg.bps);
+        if (dbi.CheckTracer(iter)) {
+            pack.tracer->HandleBreakpoint(context, dbi.bps);
             // for checking side effect
             if (*reinterpret_cast<BYTE*>(context->RegisterIp) != 0xCC) {
                 processed = true;
@@ -147,7 +147,7 @@ bool Debugger::HandleBreakpoint(PCONTEXT context) {
 }
 
 // Real VEH handler.
-long WINAPI Debugger::DebugHandler(PEXCEPTION_POINTERS exception) {
+long WINAPI DBI::DebugHandler(PEXCEPTION_POINTERS exception) {
     PEXCEPTION_RECORD record = exception->ExceptionRecord;
     PCONTEXT context = exception->ContextRecord;
 
