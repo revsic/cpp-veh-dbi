@@ -2,21 +2,21 @@
 
 #include <vehdbi.hpp>
 
-Debugger CreateDebugger() {
+DBI CreateDBI() {
     // allocate console
     AllocConsole();
     // create debugger
-    Debugger dbg;
-    dbg.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
-    return std::move(dbg);
+    DBI dbi;
+    dbi.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
+    return std::move(dbi);
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
-    static Debugger dbg = CreateDebugger();
+    static DBI dbi = CreateDBI();
 
     switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH:
-        Debugger::Run(std::move(dbg));
+        DBI::Run(std::move(dbi));
         break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
