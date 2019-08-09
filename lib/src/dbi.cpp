@@ -70,9 +70,6 @@ void VehDBI::Run(VehDBI&& target) {
 
     // set initial breakpoints
     target.SetInitialBreakPoint();
-    // set breakpoint on entrypoint
-    size_t entrypoint = Utils::GetEntryPointAddress();
-    target.bps.Set(entrypoint);
 
     // set target as global context
     SetDBI(std::move(target));
