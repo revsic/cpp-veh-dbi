@@ -24,9 +24,9 @@ struct MultipleBTCallback : BTCallback {
 };
 
 // VEH based DBI.
-struct DBI {
+struct VehDBI {
     // Constructor.
-    DBI();
+    VehDBI();
 
     // Add handler to the DBI.
     void AddHandler(size_t target, std::unique_ptr<Handler> handler);
@@ -39,14 +39,14 @@ struct DBI {
     void SetInitialBreakPoint();
 
     // Run DBI.
-    static void Run(DBI&& dbi);
+    static void Run(VehDBI&& dbi);
     // Set DBI.
-    static void SetDBI(DBI&& dbi);
+    static void SetDBI(VehDBI&& dbi);
     // Real VEH handler.
     static long WINAPI DebugHandler(PEXCEPTION_POINTERS exception);
 
 private:
-    static DBI dbi;
+    static VehDBI dbi;
 
     // Handle single step exception.
     static void HandleSingleStep(PCONTEXT context);

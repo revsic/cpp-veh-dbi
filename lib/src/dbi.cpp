@@ -2,7 +2,7 @@
 #include <branch_tracer.hpp>
 #include <dbi.hpp>
 
-DBI DBI::dbi;
+VehDBI VehDBI::dbi;
 
 // Consturctor.
 MultipleBTCallback::MultipleBTCallback(std::vector<std::unique_ptr<BTCallback>> callbacks) :
@@ -21,27 +21,27 @@ void MultipleBTCallback::run(BTInfo const& info, PCONTEXT context) {
 }
 
 // Consturctor.
-DBI::DBI() : bps(), last_bp(0), trace_flag(0), handlers(), tracers() {
+VehDBI::VehDBI() : bps(), last_bp(0), trace_flag(0), handlers(), tracers() {
     // Do nothing
 }
 
 // Add handler to the DBI.
-void DBI::AddHandler(size_t target, std::unique_ptr<Handler> handler) {
+void VehDBI::AddHandler(size_t target, std::unique_ptr<Handler> handler) {
     handlers.emplace(target, std::move(handler));
 }
 
 // Add tracer to the DBI.
-void DBI::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer) {
+void VehDBI::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer) {
     tracers.push_back({start, end, std::move(tracer)});
 }
 
 // Add BTCallback to the DBI.
-void DBI::AddBTCallback(std::unique_ptr<BTCallback> callback) {
+void VehDBI::AddBTCallback(std::unique_ptr<BTCallback> callback) {
     btcallbacks.push_back(std::move(callback));
 }
 
 // Set initial breakpoints.
-void DBI::SetInitialBreakPoint() {
+void VehDBI::SetInitialBreakPoint() {
     // add bp on specified address for handlers
     for (auto const&[addr, value] : handlers) {
         bps.Set(addr);
@@ -63,7 +63,7 @@ void DBI::SetInitialBreakPoint() {
 }
 
 // Run DBI.
-void DBI::Run(DBI&& target) {
+void VehDBI::Run(VehDBI&& target) {
     // Add default branch tracer
     auto btcallbacks = std::make_unique<MultipleBTCallback>(std::move(target.btcallbacks));
     target.AddTracer(0, 0, std::make_unique<BranchTracer>(std::move(btcallbacks)));
@@ -81,12 +81,12 @@ void DBI::Run(DBI&& target) {
 }
 
 // Set DBI.
-void DBI::SetDBI(DBI&& target) {
+void VehDBI::SetDBI(VehDBI&& target) {
     dbi = std::move(target);
 }
 
 // Handle single step exception.
-void DBI::HandleSingleStep(PCONTEXT context) {
+void VehDBI::HandleSingleStep(PCONTEXT context) {
     // rewrite breakpoint
     if (dbi.last_bp) {
         dbi.bps.Set(dbi.last_bp);
@@ -103,7 +103,7 @@ void DBI::HandleSingleStep(PCONTEXT context) {
     }
 }
 // Handle breakpoint exception.
-bool DBI::HandleBreakpoint(PCONTEXT context) {
+bool VehDBI::HandleBreakpoint(PCONTEXT context) {
     bool processed = false;
     auto recover = [&] {
         if (!processed) {
@@ -147,7 +147,7 @@ bool DBI::HandleBreakpoint(PCONTEXT context) {
 }
 
 // Real VEH handler.
-long WINAPI DBI::DebugHandler(PEXCEPTION_POINTERS exception) {
+long WINAPI VehDBI::DebugHandler(PEXCEPTION_POINTERS exception) {
     PEXCEPTION_RECORD record = exception->ExceptionRecord;
     PCONTEXT context = exception->ContextRecord;
 
