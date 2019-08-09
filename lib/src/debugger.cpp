@@ -1,8 +1,26 @@
 #include <asm_support.hpp>
+#include <branch_tracer.hpp>
 #include <debugger.hpp>
 
 Debugger Debugger::dbg;
 
+// Consturctor.
+MultipleBTCallback::MultipleBTCallback(std::vector<std::unique_ptr<BTCallback>> callbacks) :
+    callbacks(std::move(callbacks))
+{
+    // Do nothing
+}
+
+// Callback.
+void MultipleBTCallback::run(BTInfo const& info, PCONTEXT context) {
+    for (auto& callback : callbacks) {
+        if (callback != nullptr) {
+            callback->run(info, context);
+        }
+    }
+}
+
+// Consturctor.
 Debugger::Debugger() : bps(), last_bp(0), trace_flag(0), handlers(), tracers() {
     // Do nothing
 }
@@ -15,6 +33,11 @@ void Debugger::AddHandler(size_t target, std::unique_ptr<Handler> handler) {
 // Add tracer to the debugger.
 void Debugger::AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer) {
     tracers.push_back({start, end, std::move(tracer)});
+}
+
+// Add BTCallback to the debugger.
+void Debugger::AddBTCallback(std::unique_ptr<BTCallback> callback) {
+    btcallbacks.push_back(std::move(callback));
 }
 
 // Set initial breakpoints.
@@ -41,6 +64,10 @@ void Debugger::SetInitialBreakPoint() {
 
 // Run debugger.
 void Debugger::Run(Debugger&& debugger) {
+    // Add default branch tracer
+    auto btcallbacks = std::make_unique<MultipleBTCallback>(std::move(debugger.btcallbacks));
+    debugger.AddTracer(0, 0, std::make_unique<BranchTracer>(std::move(btcallbacks)));
+
     // set initial breakpoints
     debugger.SetInitialBreakPoint();
     // set breakpoint on entrypoint

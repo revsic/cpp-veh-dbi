@@ -8,9 +8,20 @@
 #include <unordered_map>
 #include <vector>
 
+#include "branch_tracer.hpp"
 #include "handler.hpp"
 #include "tracer.hpp"
 #include "utils.hpp"
+
+// Pack multiple BTCallbacks.
+struct MultipleBTCallback : BTCallback {
+    std::vector<std::unique_ptr<BTCallback>> callbacks;
+
+    // Consturctor.
+    MultipleBTCallback(std::vector<std::unique_ptr<BTCallback>> callbacks);
+    // Callback.
+    void run(BTInfo const& info, PCONTEXT context) override;
+};
 
 // VEH based debugger.
 struct Debugger {
@@ -21,6 +32,8 @@ struct Debugger {
     void AddHandler(size_t target, std::unique_ptr<Handler> handler);
     // Add tracer to the debugger.
     void AddTracer(size_t start, size_t end, std::unique_ptr<Tracer> tracer);
+    // Add BTCallback to the debugger.
+    void AddBTCallback(std::unique_ptr<BTCallback> callbacks);
 
     // Set initial breakpoints.
     void SetInitialBreakPoint();
@@ -54,7 +67,8 @@ private:
     }
 
     Utils::SoftwareBP bps;
-    
+    std::vector<std::unique_ptr<BTCallback>> btcallbacks;
+
     size_t last_bp;
     size_t trace_flag;
 
