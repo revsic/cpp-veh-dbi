@@ -1,14 +1,14 @@
 #include <Windows.h>
 
-#include <branch_tracer.hpp>
 #include <debugger.hpp>
+#include <logger.hpp>
 
 Debugger CreateDebugger() {
     // allocate console
     AllocConsole();
     // create debugger
     Debugger dbg;
-    dbg.AddTracer(0, 0, std::make_unique<BranchTracer>("CONOUT$"));
+    dbg.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
     return std::move(dbg);
 }
 
