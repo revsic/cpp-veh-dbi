@@ -56,7 +56,7 @@ size_t entrypoint = Utils::GetEntryPointAddress();
 dbi.AddHandler(entrypoint, std::make_unique<EntrypointHandler>());
 ```
 
-`VehDBI::AddHandler` get two arguments, address(`size_t`) and handler (`std::unique_ptr<Handler>`).
+`VehDBI::AddHandler` get two arguments, address(`size_t`) and handler(`std::unique_ptr<Handler>`).
 
 `Handler` require only one method, which will be invoked in specified address.
 ```c++
