@@ -12,9 +12,21 @@ VehDBI CreateDBI() {
     AllocConsole();
     // create dbi
     VehDBI dbi;
+
     // handler sample
     size_t entrypoint = Utils::GetEntryPointAddress();
     dbi.AddHandler(entrypoint, std::make_unique<EntrypointHandler>());
+
+    // dbi.AddTracer(0, 0, std::make_unique<BranchTracer>());
+
+    // btcallback sample
+    auto logger = std::make_unique<Logger>("CONOUT$");
+    // tracer sample
+    dbi.AddTracer(0, 0, std::make_unique<BranchTracer>(std::move(logger)));
+
+    // above is same as under
+    // dbi.AddBTCallback(std::make_unique<Logger>("CONOUT$"));
+
     return std::move(dbi);
 }
 
