@@ -1,7 +1,6 @@
 #include <Windows.h>
 
-#include <debugger.hpp>
-#include <logger.hpp>
+#include <vehdbi.hpp>
 
 Debugger CreateDebugger() {
     // allocate console
