@@ -8,6 +8,5 @@ msbuild sample.sln /p:configuration=Release
 
 Copy-Item branchtracer\Release\branchtracer.dll ..\..\bin\branchtracer.dll
 Copy-Item dllinjector\Release\dllinjector.exe ..\..\bin\dllinjector.exe
-Copy-Item printerdbg\Release\printerdbg.dll ..\..\bin\printerdbg.dll
 
 Set-Location ..\..
